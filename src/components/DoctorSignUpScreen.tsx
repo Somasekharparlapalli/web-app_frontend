@@ -34,21 +34,76 @@ export function DoctorSignUpScreen({ onNavigate, setUserRole, onSignUpSuccess }:
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
-      setMessage({ text: 'Please fill in all required fields', type: 'error' });
-      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+    const clearMsg = () => setTimeout(() => setMessage({ text: '', type: '' }), 4000);
+
+    if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword || !formData.phone || !formData.licenseNumber || !formData.specialty) {
+      setMessage({ text: 'Please fill in all required fields (*)', type: 'error' });
+      clearMsg();
+      return;
+    }
+
+    if (formData.fullName.trim().length < 3) {
+      setMessage({ text: 'Full name must be at least 3 characters', type: 'error' });
+      clearMsg();
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setMessage({ text: 'Please enter a valid email address', type: 'error' });
+      clearMsg();
+      return;
+    }
+
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      setMessage({ text: 'Phone number must be exactly 10 digits (0-9)', type: 'error' });
+      clearMsg();
+      return;
+    }
+
+    const licenseRegex = /^[A-Za-z0-9]{5,15}$/;
+    if (!licenseRegex.test(formData.licenseNumber)) {
+      setMessage({ text: 'Medical license must be 5-15 alphanumeric characters', type: 'error' });
+      clearMsg();
+      return;
+    }
+
+    // Password validations
+    const hasUppercase = /[A-Z]/.test(formData.password);
+    const hasLowercase = /[a-z]/.test(formData.password);
+    const hasNumber = /[0-9]/.test(formData.password);
+    const hasSpecial = /[!@#$%^&*]/.test(formData.password);
+
+    if (formData.password.length < 8) {
+      setMessage({ text: 'Password must be at least 8 characters', type: 'error' });
+      clearMsg();
+      return;
+    }
+    if (!hasUppercase) {
+      setMessage({ text: 'Password must contain at least one uppercase letter', type: 'error' });
+      clearMsg();
+      return;
+    }
+    if (!hasLowercase) {
+      setMessage({ text: 'Password must contain at least one lowercase letter', type: 'error' });
+      clearMsg();
+      return;
+    }
+    if (!hasNumber) {
+      setMessage({ text: 'Password must contain at least one number', type: 'error' });
+      clearMsg();
+      return;
+    }
+    if (!hasSpecial) {
+      setMessage({ text: 'Password must contain at least one special character (!@#$%^&*)', type: 'error' });
+      clearMsg();
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       setMessage({ text: 'Passwords do not match', type: 'error' });
-      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setMessage({ text: 'Password must be at least 6 characters', type: 'error' });
-      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+      clearMsg();
       return;
     }
 
@@ -81,9 +136,9 @@ export function DoctorSignUpScreen({ onNavigate, setUserRole, onSignUpSuccess }:
   };
 
   return (
-    <div className="h-full w-full bg-white flex flex-col">
+    <div className="h-full w-full bg-gray-50 flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+      <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3 bg-white">
         <button
           onClick={() => onNavigate('doctor-login')}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -94,191 +149,199 @@ export function DoctorSignUpScreen({ onNavigate, setUserRole, onSignUpSuccess }:
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-8">
-        {/* Icon Header */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
-            <Stethoscope className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-xl text-gray-800 mb-1">Create Doctor Account</h2>
-          <p className="text-sm text-gray-600 text-center">Join our healthcare platform</p>
-        </div>
-
-        {/* Success/Error Message */}
-        {message.text && (
-          <div className={`mb-6 p-4 rounded-xl ${message.type === 'success'
-            ? 'bg-green-50 border border-green-200'
-            : 'bg-red-50 border border-red-200'
-            }`}>
-            <p className={`text-sm ${message.type === 'success' ? 'text-green-700' : 'text-red-700'
-              }`}>
-              {message.text}
-            </p>
-          </div>
-        )}
-
-        {/* Sign Up Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Full Name */}
-          <div>
-            <label className="block text-sm text-gray-700 mb-2">Full Name *</label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                placeholder="Dr. John Smith"
-                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+      <div className="flex-1 overflow-y-auto bg-gray-50 flex justify-center">
+        <div className="min-h-full flex flex-col items-center justify-center p-6 w-full">
+          <div className="max-w-2xl w-full bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+            {/* Icon Header */}
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
+                <Stethoscope className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-xl text-gray-800 mb-1">Create Doctor Account</h2>
+              <p className="text-sm text-gray-600 text-center">Join our healthcare platform</p>
             </div>
-          </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm text-gray-700 mb-2">Email Address *</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="doctor@hospital.com"
-                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
+            {/* Success/Error Message */}
+            {message.text && (
+              <div className={`mb-6 p-4 rounded-xl ${message.type === 'success'
+                ? 'bg-green-50 border border-green-200'
+                : 'bg-red-50 border border-red-200'
+                }`}>
+                <p className={`text-sm ${message.type === 'success' ? 'text-green-700' : 'text-red-700'
+                  }`}>
+                  {message.text}
+                </p>
+              </div>
+            )}
 
-          {/* Phone */}
-          <div>
-            <label className="block text-sm text-gray-700 mb-2">Phone Number</label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="+1 234 567 8900"
-                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
+            {/* Sign Up Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div
+                className="grid grid-cols-1 md:grid-cols-2"
+                style={{ gap: "10px" }}
+              >                {/* Full Name */}
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2">Full Name *</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      placeholder="Dr. John Smith"
+                      className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
 
-          {/* License Number */}
-          <div>
-            <label className="block text-sm text-gray-700 mb-2">Medical License Number</label>
-            <input
-              type="text"
-              name="licenseNumber"
-              value={formData.licenseNumber}
-              onChange={handleChange}
-              placeholder="e.g., MD123456"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+                {/* Email */}
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2">Email Address *</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="doctor@hospital.com"
+                      className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
 
-          {/* Specialty */}
-          <div>
-            <label className="block text-sm text-gray-700 mb-2">Specialty</label>
-            <select
-              name="specialty"
-              value={formData.specialty}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Select specialty</option>
-              <option value="General Dentistry">General Dentistry</option>
-              <option value="Orthodontics">Orthodontics</option>
-              <option value="Pediatric Dentistry">Pediatric Dentistry</option>
-              <option value="Periodontics">Periodontics</option>
-              <option value="Endodontics">Endodontics</option>
-              <option value="Oral Surgery">Oral Surgery</option>
-            </select>
-          </div>
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2">Phone Number *</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="+1 234 567 8900"
+                      className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
 
-          {/* Clinic Name */}
-          <div>
-            <label className="block text-sm text-gray-700 mb-2">Clinic Name</label>
-            <input
-              type="text"
-              name="clinicName"
-              value={formData.clinicName}
-              onChange={handleChange}
-              placeholder="e.g., Satish Dental Clinic"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+                {/* License Number */}
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2">Medical License Number *</label>
+                  <input
+                    type="text"
+                    name="licenseNumber"
+                    value={formData.licenseNumber}
+                    onChange={handleChange}
+                    placeholder="e.g., MD123456"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
 
-          {/* Password */}
-          <div>
-            <label className="block text-sm text-gray-700 mb-2">Password *</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Minimum 8 characters"
-                className="w-full pl-11 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+                {/* Specialty */}
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2">Specialty *</label>
+                  <select
+                    name="specialty"
+                    value={formData.specialty}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select specialty</option>
+                    <option value="General Dentistry">General Dentistry</option>
+                    <option value="Orthodontics">Orthodontics</option>
+                    <option value="Pediatric Dentistry">Pediatric Dentistry</option>
+                    <option value="Periodontics">Periodontics</option>
+                    <option value="Endodontics">Endodontics</option>
+                    <option value="Oral Surgery">Oral Surgery</option>
+                  </select>
+                </div>
+
+                {/* Clinic Name */}
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2">Clinic Name</label>
+                  <input
+                    type="text"
+                    name="clinicName"
+                    value={formData.clinicName}
+                    onChange={handleChange}
+                    placeholder="e.g., Satish Dental Clinic"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2">Password *</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Minimum 8 characters"
+                      className="w-full pl-11 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2">Confirm Password *</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Re-enter password"
+                      className="w-full pl-11 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sign Up Button */}
               <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3.5 rounded-xl font-medium hover:opacity-90 transition-all shadow-md disabled:opacity-50 mt-6"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {isLoading ? 'Creating Account...' : 'Create Doctor Account'}
               </button>
+            </form>
+
+            {/* Sign In Link */}
+            <div className="text-center mt-6">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <button
+                  onClick={() => onNavigate('doctor-login')}
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Sign In
+                </button>
+              </p>
             </div>
           </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm text-gray-700 mb-2">Confirm Password *</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Re-enter password"
-                className="w-full pl-11 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Sign Up Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3.5 rounded-xl font-medium hover:opacity-90 transition-all shadow-md disabled:opacity-50 mt-6"
-          >
-            {isLoading ? 'Creating Account...' : 'Create Doctor Account'}
-          </button>
-        </form>
-
-        {/* Sign In Link */}
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <button
-              onClick={() => onNavigate('doctor-login')}
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Sign In
-            </button>
-          </p>
         </div>
       </div>
     </div>

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ArrowLeft, Heart, AlertCircle, CheckCircle, Clock, Pill, FileText, Calendar, XCircle } from 'lucide-react';
-import { AIChatButton } from './AIChatButton';
 
 interface MedicalHistoryScreenProps {
   onNavigate: (screen: string) => void;
@@ -137,7 +136,6 @@ export function MedicalHistoryScreen({ onNavigate }: MedicalHistoryScreenProps) 
         </button>
       </div>
       
-      <AIChatButton context="medical" />
-    </div>
+          </div>
   );
 }

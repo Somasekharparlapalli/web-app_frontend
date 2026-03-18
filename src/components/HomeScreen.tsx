@@ -25,7 +25,6 @@ import {
   Trash2
 } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { AIChatButton } from './AIChatButton';
 
 interface HomeScreenProps {
   userProfile: {
@@ -58,10 +57,18 @@ export function HomeScreen({ userProfile, onNavigate, doctorAnalysisHistory = []
       severity: s.severity || s.riskLevel || 'Mild'
     }));
     const localIds = new Set(localScans.map(s => String(s.id)));
-    const uniqueRemote = allDbScans.filter(s => !localIds.has(String(s.id))).map(s => ({
+    
+    // Filter remote scans to only those belonging to doctor's patients
+    const patientIds = new Set((patients || []).map(p => String(p.id)));
+    const uniqueRemote = allDbScans.filter(s => {
+      const isLocal = localIds.has(String(s.id));
+      const belongsToPatient = s.patient_id ? patientIds.has(String(s.patient_id)) : false;
+      return !isLocal && belongsToPatient;
+    }).map(s => ({
       ...s,
       severity: s.severity || 'Mild'
     }));
+    
     return [...localScans, ...uniqueRemote];
   };
 
@@ -349,8 +356,8 @@ export function HomeScreen({ userProfile, onNavigate, doctorAnalysisHistory = []
 
               <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                 <div className="divide-y divide-gray-100">
-                  {doctorAnalysisHistory.length > 0 ? (
-                    doctorAnalysisHistory.slice(0, 5).map((scan) => (
+                  {combinedScansForStats.length > 0 ? (
+                    combinedScansForStats.slice(0, 5).map((scan) => (
                       <div key={scan.id} className="relative group/scan-item flex items-center">
                         {isSelectionMode && (
                           <div className="p-4 pr-0">
@@ -375,50 +382,31 @@ export function HomeScreen({ userProfile, onNavigate, doctorAnalysisHistory = []
                           }}
                           className="flex-1 p-4 hover:bg-gray-50 transition-colors text-left flex items-center gap-4 pr-12"
                         >
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${scan.riskLevel === 'Severe' ? 'bg-red-100' :
-                            scan.riskLevel === 'Moderate' ? 'bg-orange-100' : 'bg-green-100'
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${(scan.severity === 'Severe' || scan.severity === 'High') ? 'bg-red-100' :
+                            scan.severity === 'Moderate' ? 'bg-orange-100' : 'bg-green-100'
                             }`}>
-                            <FileText className={`w-5 h-5 ${scan.riskLevel === 'Severe' ? 'text-red-600' :
-                              scan.riskLevel === 'Moderate' ? 'text-orange-600' : 'text-green-600'
+                            <FileText className={`w-5 h-5 ${(scan.severity === 'Severe' || scan.severity === 'High') ? 'text-red-600' :
+                              scan.severity === 'Moderate' ? 'text-orange-600' : 'text-green-600'
                               }`} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm text-gray-900 font-medium truncate">{scan.title || (scan.toothType ? `${scan.toothType} Scan` : 'Dental Scan')}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">{scan.date} • {scan.time}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{scan.date} {scan.time ? `• ${scan.time}` : ''}</p>
                           </div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${scan.riskLevel === 'Severe' ? 'bg-red-100 text-red-700' :
-                            scan.riskLevel === 'Moderate' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${(scan.severity === 'Severe' || scan.severity === 'High') ? 'bg-red-100 text-red-700' :
+                            scan.severity === 'Moderate' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
                             }`}>
-                            {scan.riskLevel} Risk
+                            {scan.severity} Risk
                           </span>
                         </button>
                       </div>
                     ))
                   ) : (
-                    recentScans.slice(0, 5).map((scan) => (
-                      <button
-                        key={scan.id}
-                        onClick={() => onNavigate('scan-history')}
-                        className="w-full p-4 hover:bg-gray-50 transition-colors text-left flex items-center gap-4"
-                      >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${scan.risk === 'Severe' ? 'bg-red-100' :
-                          scan.risk === 'Moderate' ? 'bg-orange-100' : 'bg-green-100'
-                          }`}>
-                          <FileText className={`w-5 h-5 ${scan.risk === 'Severe' ? 'text-red-600' :
-                            scan.risk === 'Moderate' ? 'text-orange-600' : 'text-green-600'
-                            }`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 font-medium truncate">{scan.title}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{scan.date}</p>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${scan.risk === 'Severe' ? 'bg-red-100 text-red-700' :
-                          scan.risk === 'Moderate' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
-                          }`}>
-                          {scan.type}
-                        </span>
-                      </button>
-                    ))
+                    <div className="p-10 text-center">
+                      <FileText className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm font-medium text-gray-800">No Recent Scans</p>
+                      <p className="text-xs text-gray-500">Scans you capture will appear here.</p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -427,8 +415,7 @@ export function HomeScreen({ userProfile, onNavigate, doctorAnalysisHistory = []
         </div>
       </div>
 
-      {/* AI Chat Button */}
-      <AIChatButton />
+      
     </div>
   );
 }

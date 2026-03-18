@@ -1,5 +1,4 @@
 import { ArrowLeft, Smile, Droplet, Apple, Moon, AlertTriangle, CheckCircle, Shield, Clock } from 'lucide-react';
-import { AIChatButton } from './AIChatButton';
 
 interface PreventionTipsScreenProps {
   onNavigate: (screen: string) => void;
@@ -143,7 +142,6 @@ export function PreventionTipsScreen({ onNavigate }: PreventionTipsScreenProps) 
         </button>
       </div>
       
-      <AIChatButton context="prevention" />
-    </div>
+          </div>
   );
 }

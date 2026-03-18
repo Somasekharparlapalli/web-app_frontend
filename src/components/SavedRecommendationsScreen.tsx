@@ -1,5 +1,4 @@
 import { ArrowLeft, BookmarkCheck, Calendar, FileText, ChevronRight, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
-import { AIChatButton } from './AIChatButton';
 import { ScanData } from '../App';
 
 interface SavedRecommendationsScreenProps {
@@ -215,7 +214,6 @@ export function SavedRecommendationsScreen({ onNavigate, onViewRecommendation }:
         </div>
       </div>
       
-      <AIChatButton context="recommendations" />
-    </div>
+          </div>
   );
 }

@@ -1,5 +1,4 @@
 import { ArrowLeft, Shield, Droplet, CheckCircle, Info, Activity } from 'lucide-react';
-import { AIChatButton } from './AIChatButton';
 
 interface VarnishInfoScreenProps {
   onNavigate: (screen: string) => void;
@@ -116,7 +115,6 @@ export function VarnishInfoScreen({ onNavigate }: VarnishInfoScreenProps) {
         </div>
       </div>
       
-      <AIChatButton context="general" />
-    </div>
+          </div>
   );
 }

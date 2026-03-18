@@ -75,14 +75,22 @@ export function ForgotPasswordScreen({ onNavigate, forgotPasswordPortal = 'docto
   const textColor = isStudentPortal ? "text-green-600" : "text-blue-600";
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      <div className="flex-1 flex flex-col justify-center px-6 py-8 overflow-y-auto">
+    <div className="h-full w-full bg-gray-50 flex flex-col">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3 bg-white">
         <button
           onClick={() => step === 'otp' ? setStep('email') : onNavigate(backDestination)}
-          className="mb-8 p-2 hover:bg-gray-100 rounded-lg transition-colors w-fit"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </button>
+        <h1 className="text-lg text-gray-800">Forgot Password</h1>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="min-h-full flex flex-col items-center justify-center p-6 w-full">
+          <div className="max-w-md w-full bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
 
         {step === 'email' && (
           <form onSubmit={handleRequestOtp}>
@@ -241,6 +249,8 @@ export function ForgotPasswordScreen({ onNavigate, forgotPasswordPortal = 'docto
             </button>
           </div>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );

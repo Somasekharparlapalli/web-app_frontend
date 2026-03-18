@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { ArrowLeft, Camera, CheckCircle, AlertCircle, User, ChevronDown } from 'lucide-react';
-import { AIChatButton } from './AIChatButton';
 import { ScanData } from '../types';
 
 interface Patient {
@@ -115,9 +114,15 @@ export function UploadImageScreen({ onNavigate, onScanComplete, userRole, patien
       setIsInvalid(false);
 
       const currentRiskLevel = result['Risk Level'] || 'Moderate';
+      const sanitizeFilename = (name: string): string => {
+        return name
+          .replace(/\s+/g, '_')
+          .replace(/[()]/g, '');
+      };
+
       const scanData: ScanData = {
         image: selectedImage,
-        imageUrl: result['image_url'] || result['image_path'] || result['file_path'] || selectedFile.name || '',
+        imageUrl: result['image_url'] || result['image_path'] || result['file_path'] || sanitizeFilename(selectedFile.name) || '',
         hasIssue: currentRiskLevel !== 'None',
         severity: currentRiskLevel === 'Severe' ? 'high' : currentRiskLevel === 'Moderate' ? 'moderate' : 'low',
         confidence: parseFloat(result['Confidence']?.replace('%', '') || '0'),
@@ -328,7 +333,6 @@ export function UploadImageScreen({ onNavigate, onScanComplete, userRole, patien
           </button>
         </div>
       </div>
-      <AIChatButton context="upload" />
-    </div>
+          </div>
   );
 }

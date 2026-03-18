@@ -11,9 +11,10 @@ interface ScanHistoryScreenProps {
   patientId?: string;
   doctorAnalysisHistory?: any[];
   onDeleteScan?: (scanId: string | number) => Promise<{ status: boolean; message?: string }>;
+  patients?: any[];
 }
 
-export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, patientId, doctorAnalysisHistory = [], onDeleteScan }: ScanHistoryScreenProps) {
+export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, patientId, doctorAnalysisHistory = [], onDeleteScan, patients = [] }: ScanHistoryScreenProps) {
   const [scans, setScans] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [dbError, setDbError] = useState(false);
@@ -23,7 +24,7 @@ export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, pati
 
   useEffect(() => {
     loadScans();
-  }, [patientId, doctorAnalysisHistory]);
+  }, [patientId, doctorAnalysisHistory, patients]);
 
   const updateStats = (scanList: any[]) => {
     const newStats = {
@@ -43,7 +44,7 @@ export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, pati
     // Already a full HTTP URL
     if (imagePath.startsWith('http')) return imagePath;
     // Server-relative filename — prefix with backend uploads URL
-    return `${UPLOADS_URL}${imagePath}`;
+    return `${UPLOADS_URL}${imagePath.replace(/^(\/)?uploads\//, '')}`;
   };
 
   const loadScans = async () => {
@@ -95,7 +96,17 @@ export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, pati
 
         // Avoid duplicates with local scans
         const localIds = new Set(combinedScans.map(s => String(s.id)));
-        const uniqueRemote = mappedRemote.filter((s: any) => !localIds.has(String(s.id)));
+        let uniqueRemote = mappedRemote.filter((s: any) => !localIds.has(String(s.id)));
+
+        // Filter by patient_id if no specific patientId requested
+        // This ensures a doctor only sees scans for their own patients
+        if (!patientId) {
+          const patientIdSet = new Set((patients || []).map(p => String(p.id)));
+          uniqueRemote = uniqueRemote.filter((s: any) => 
+            s.patient_id ? patientIdSet.has(String(s.patient_id)) : false
+          );
+        }
+
         combinedScans = [...combinedScans, ...uniqueRemote];
       }
     } catch (error) {

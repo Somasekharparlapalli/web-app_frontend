@@ -1,5 +1,4 @@
 import { ArrowLeft, AlertCircle, CheckCircle, FileText, Shield, Droplet } from 'lucide-react';
-import { AIChatButton } from './AIChatButton';
 import { ScanData } from '../types';
 import { apiService } from '../api/apiService';
 
@@ -319,7 +318,6 @@ export function DetectionResultScreen({ onNavigate, scanData, userRole, onSaveSc
         </div>
       </div>
 
-      <AIChatButton context="detection" />
-    </div>
+          </div>
   );
 }

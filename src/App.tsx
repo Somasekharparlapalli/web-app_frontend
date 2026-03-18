@@ -65,6 +65,7 @@ export default function App() {
     profile_image: ''
   });
 
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setCurrentScreen('auth');
@@ -72,8 +73,6 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-
-  // Revert back to start-of-day: patients state is set manually or is mock data
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string | number | null>(null);
 
@@ -93,6 +92,7 @@ export default function App() {
           oralHygieneScore: p.oral_hygiene_score || 'Good'
         }));
         setPatients(mappedPatients);
+        fetchAllScans(mappedPatients);
       }
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -112,7 +112,9 @@ export default function App() {
       license: doctorData.license_number || doctorData.medical_license_number || '',
       bio: doctorData.bio || '',
       profile_image: doctorData.profile_image 
-        ? (doctorData.profile_image.startsWith('http') ? doctorData.profile_image : `${UPLOADS_URL}${doctorData.profile_image}`)
+        ? (doctorData.profile_image.startsWith('http') 
+            ? doctorData.profile_image 
+            : `${UPLOADS_URL}${doctorData.profile_image.replace(/^(\/)?uploads\//, '')}`)
         : ''
     };
 
@@ -160,29 +162,61 @@ export default function App() {
     }
   }, [currentScreen]);
 
-  const [doctorAnalysisHistory, setDoctorAnalysisHistory] = useState<any[]>(() => {
-    try {
-      const saved = localStorage.getItem('doctorAnalysisHistory');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
+  const [doctorAnalysisHistory, setDoctorAnalysisHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (userProfile.id) {
+      try {
+        const specificSaved = localStorage.getItem(`doctorAnalysisHistory_${userProfile.id}`);
+        const parsedSpecific = specificSaved ? JSON.parse(specificSaved) : [];
+
+        if (Array.isArray(parsedSpecific) && parsedSpecific.length > 0) {
+          setDoctorAnalysisHistory(parsedSpecific);
+        } else {
+          // Migration step: copy over items from generic key to doctor-specific key on first load
+          const genericSaved = localStorage.getItem('doctorAnalysisHistory');
+          if (genericSaved) {
+            const parsedGeneric = JSON.parse(genericSaved);
+            if (Array.isArray(parsedGeneric) && parsedGeneric.length > 0) {
+              setDoctorAnalysisHistory(parsedGeneric);
+              // Save to scoped key for future loads
+              localStorage.setItem(`doctorAnalysisHistory_${userProfile.id}`, JSON.stringify(parsedGeneric));
+            } else {
+              setDoctorAnalysisHistory([]);
+            }
+          } else {
+            setDoctorAnalysisHistory([]);
+          }
+        }
+      } catch (err) {
+        console.error('Error during doctorAnalysisHistory migration/loading:', err);
+        setDoctorAnalysisHistory([]);
+      }
+    } else {
+      setDoctorAnalysisHistory([]);
     }
-  });
+  }, [userProfile.id]);
 
   const [allDbScans, setAllDbScans] = useState<any[]>([]);
 
-  const fetchAllScans = async () => {
+  async function fetchAllScans(currentPatients: any[] = patients) {
     try {
-      // Use the correct endpoint pattern /scan_history/{id}
       const response = await apiService.getAllScanHistory(0);
       if (response.status && response.data) {
         const mappedScans = response.data.map((s: any) => ({
           ...s,
-          image: s.image_path?.includes('captured_scan_') ? '' : (s.image_path ? `${UPLOADS_URL.replace(/\/$/, '')}/${s.image_path}` : s.image),
+          image: s.image_path?.includes('captured_scan_') ? '' : (s.image_path ? `${UPLOADS_URL}${s.image_path.replace(/^(\/)?uploads\//, '')}` : s.image),
           riskLevel: s.severity || 'Mild',
           date: s.created_at ? new Date(s.created_at).toLocaleDateString() : 'Recent'
         }));
-        setAllDbScans(mappedScans);
+
+        // Filter by patients to isolate data to the logged-in doctor
+        const patientIdSet = new Set((currentPatients || []).map(p => String(p.id)));
+        const filteredScans = mappedScans.filter((s: any) => 
+          s.patient_id ? patientIdSet.has(String(s.patient_id)) : false
+        );
+
+        setAllDbScans(filteredScans);
       }
     } catch (error) {
       console.error('Error fetching all scans:', error);
@@ -274,7 +308,7 @@ export default function App() {
       };
       const updated = [newDoctorAnalysis, ...doctorAnalysisHistory];
       setDoctorAnalysisHistory(updated);
-      try { localStorage.setItem('doctorAnalysisHistory', JSON.stringify(updated)); } catch { }
+      try { localStorage.setItem(`doctorAnalysisHistory_${userProfile.id}`, JSON.stringify(updated)); } catch { }
       fetchAllScans(); // refreshing DB list instantly
     }
   };
@@ -293,7 +327,7 @@ export default function App() {
       const updated = doctorAnalysisHistory.filter(s => String(s.id) !== String(scanId));
       setDoctorAnalysisHistory(updated);
       setAllDbScans(prev => prev.filter(s => String(s.id) !== String(scanId)));
-      localStorage.setItem('doctorAnalysisHistory', JSON.stringify(updated));
+      localStorage.setItem(`doctorAnalysisHistory_${userProfile.id}`, JSON.stringify(updated));
       return { status: true };
     } catch (error: any) {
       console.error('Error in handleDeleteScan:', error);
@@ -321,6 +355,24 @@ export default function App() {
   };
 
   const handleNavigate = (newScreen: string) => {
+    // Clear sensitive doctor data when navigating to authentication/login screens (Sign Out effect)
+    if (['auth', 'login', 'doctor-login', 'signup', 'doctor-signup'].includes(newScreen)) {
+      setUserProfile({
+        id: '',
+        name: 'Dr. Sarah Johnson', // Fallback defaults
+        email: 'sarah.johnson@email.com',
+        phone: '',
+        specialty: 'Dental Care Specialist',
+        clinicName: 'Varnish Dental Clinic',
+        license: '',
+        bio: '',
+        profile_image: ''
+      });
+      setPatients([]);
+      setDoctorAnalysisHistory([]);
+      setAllDbScans([]);
+      setUserRole(null);
+    }
     setPreviousScreen(currentScreen);
     setCurrentScreen(newScreen);
   };
@@ -338,7 +390,7 @@ export default function App() {
       case 'doctor-signup':
         return <DoctorSignUpScreen onNavigate={handleNavigate} setUserRole={setUserRole} onSignUpSuccess={handleLoginSuccess} />;
       case 'signup':
-        return <SignUpScreen onNavigate={handleNavigate} />;
+        return <DoctorSignUpScreen onNavigate={handleNavigate} setUserRole={setUserRole} onSignUpSuccess={handleLoginSuccess} />;
       case 'forgot-password':
         return <ForgotPasswordScreen onNavigate={handleNavigate} forgotPasswordPortal={forgotPasswordPortal} />;
       case 'home':
@@ -358,9 +410,9 @@ export default function App() {
       case 'recommendation':
         return <RecommendationScreen onNavigate={handleNavigate} scanData={currentScanData} />;
       case 'history':
-        return <ScanHistoryScreen onNavigate={handleNavigate} userRole={userRole} onViewScanReport={handleViewScanReport} patientId={selectedPatientId?.toString()} doctorAnalysisHistory={doctorAnalysisHistory} onDeleteScan={handleDeleteScan} />;
+        return <ScanHistoryScreen onNavigate={handleNavigate} userRole={userRole} onViewScanReport={handleViewScanReport} patientId={selectedPatientId?.toString()} doctorAnalysisHistory={doctorAnalysisHistory} onDeleteScan={handleDeleteScan} patients={patients} />;
       case 'scan-history':
-        return <ScanHistoryScreen onNavigate={handleNavigate} userRole={userRole} onViewScanReport={handleViewScanReport} patientId={selectedPatientId?.toString()} doctorAnalysisHistory={doctorAnalysisHistory} onDeleteScan={handleDeleteScan} />;
+        return <ScanHistoryScreen onNavigate={handleNavigate} userRole={userRole} onViewScanReport={handleViewScanReport} patientId={selectedPatientId?.toString()} doctorAnalysisHistory={doctorAnalysisHistory} onDeleteScan={handleDeleteScan} patients={patients} />;
       case 'doctor-ai-analyses':
         return <DoctorAIAnalysesScreen onNavigate={handleNavigate} doctorAnalysisHistory={doctorAnalysisHistory} />;
       case 'about':

@@ -1,5 +1,4 @@
 import { ArrowLeft, TrendingUp, Shield, Calendar, AlertTriangle, CheckCircle, Droplet, Zap, BookmarkCheck } from 'lucide-react';
-import { AIChatButton } from './AIChatButton';
 import { ScanData } from '../App';
 import { useState } from 'react';
 
@@ -437,7 +436,6 @@ export function RecommendationScreen({ onNavigate, scanData }: RecommendationScr
         </button>
       </div>
       
-      <AIChatButton context="recommendation" />
-    </div>
+          </div>
   );
 }

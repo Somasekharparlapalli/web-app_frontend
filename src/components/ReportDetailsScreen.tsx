@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ArrowLeft, FileText, Calendar, AlertCircle, CheckCircle, Download, Share2, TrendingUp, XCircle } from 'lucide-react';
-import { AIChatButton } from './AIChatButton';
 import type { MedicalData } from '../App';
 
 interface ReportDetailsScreenProps {
@@ -464,7 +463,6 @@ export function ReportDetailsScreen({ onNavigate, medicalData }: ReportDetailsSc
         </button>
       </div>
       
-      <AIChatButton context="report" />
-    </div>
+          </div>
   );
 }

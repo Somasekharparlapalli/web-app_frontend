@@ -1,5 +1,4 @@
 import { ArrowLeft, Shield, Droplet, Sparkles, Zap, Star, Info, ChevronDown, ChevronUp } from 'lucide-react';
-import { AIChatButton } from './AIChatButton';
 import { useState } from 'react';
 
 interface PeptideTypesScreenProps {
@@ -392,7 +391,6 @@ export function PeptideTypesScreen({ onNavigate, userRole, previousScreen }: Pep
         </div>
       </div>
 
-      <AIChatButton context="peptide" />
-    </div>
+          </div>
   );
 }

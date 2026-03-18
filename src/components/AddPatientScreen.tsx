@@ -138,7 +138,7 @@ export function AddPatientScreen({ onNavigate, setPatients, doctorId, onPatientA
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
               {/* Full Name */}
-              <div className="md:col-span-2">
+              <div>
                 <label className="text-sm text-gray-600 mb-2 block font-medium">Full Name *</label>
                 <input
                   type="text"
@@ -176,7 +176,7 @@ export function AddPatientScreen({ onNavigate, setPatients, doctorId, onPatientA
               </div>
 
               {/* Phone Number */}
-              <div className="md:col-span-2">
+              <div>
                 <label className="text-sm text-gray-600 mb-2 block font-medium">Phone Number *</label>
                 <input
                   type="tel"
@@ -188,7 +188,7 @@ export function AddPatientScreen({ onNavigate, setPatients, doctorId, onPatientA
               </div>
 
               {/* Medical History */}
-              <div className="md:col-span-2">
+              <div>
                 <label className="text-sm text-gray-600 mb-2 block font-medium">Medical History</label>
                 <textarea
                   value={medicalHistory}
@@ -200,7 +200,7 @@ export function AddPatientScreen({ onNavigate, setPatients, doctorId, onPatientA
               </div>
 
               {/* Oral Hygiene Score */}
-              <div className="md:col-span-2">
+              <div>
                 <label className="text-sm text-gray-600 mb-2 block font-medium">Oral Hygiene Score *</label>
                 <select
                   value={oralHygieneScore}

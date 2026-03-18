@@ -15,13 +15,31 @@ export function DoctorLoginScreen({ onNavigate, setUserRole, setForgotPasswordPo
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [isLoading, setIsLoading] = useState(false);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const clearMsg = () => setTimeout(() => setMessage({ text: '', type: '' }), 4000);
+
     if (!email || !password) {
       setMessage({ text: 'Please fill in all fields', type: 'error' });
-      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+      clearMsg();
+      return;
+    }
+
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*]/.test(password);
+
+    if (password.length < 8) {
+      setMessage({ text: 'Password must be at least 8 characters', type: 'error' });
+      clearMsg();
+      return;
+    }
+    
+    if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+      setMessage({ text: 'Invalid password format. Must meet strength requirements.', type: 'error' });
+      clearMsg();
       return;
     }
 
@@ -54,9 +72,9 @@ export function DoctorLoginScreen({ onNavigate, setUserRole, setForgotPasswordPo
   };
 
   return (
-    <div className="h-full w-full bg-white flex flex-col">
+    <div className="h-full w-full bg-gray-50 flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+      <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3 bg-white">
         <button
           onClick={() => onNavigate('role-selection')}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -67,7 +85,9 @@ export function DoctorLoginScreen({ onNavigate, setUserRole, setForgotPasswordPo
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-8">
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="min-h-full flex flex-col items-center justify-center p-6 w-full">
+          <div className="max-w-md w-full bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
         {/* Icon Header */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
@@ -176,23 +196,8 @@ export function DoctorLoginScreen({ onNavigate, setUserRole, setForgotPasswordPo
           </p>
         </div>
 
-        {/* Additional Info */}
-        <div className="mt-8 bg-blue-50 rounded-xl p-4 border border-blue-200">
-          <h3 className="text-sm font-medium text-blue-900 mb-2">Doctor Portal Access</h3>
-          <ul className="space-y-1.5">
-            <li className="text-xs text-blue-700 flex items-start gap-2">
-              <span className="w-1 h-1 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Full patient management system</span>
-            </li>
-            <li className="text-xs text-blue-700 flex items-start gap-2">
-              <span className="w-1 h-1 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>AI-powered diagnostic tools</span>
-            </li>
-            <li className="text-xs text-blue-700 flex items-start gap-2">
-              <span className="w-1 h-1 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Generate medical reports and prescriptions</span>
-            </li>
-          </ul>
+
+        </div>
         </div>
       </div>
     </div>

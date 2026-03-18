@@ -1,6 +1,5 @@
 import { ArrowLeft, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
-import { AIChatButton } from './AIChatButton';
 
 interface FAQScreenProps {
   onNavigate: (screen: string) => void;
@@ -110,7 +109,6 @@ export function FAQScreen({ onNavigate }: FAQScreenProps) {
         </div>
       </div>
       
-      <AIChatButton context="faq" />
-    </div>
+          </div>
   );
 }
