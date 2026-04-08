@@ -73,6 +73,7 @@ export const apiService = {
         formData.append('specialty', profileData.specialty);
         formData.append('clinic_name', profileData.clinicName || profileData.clinic_name);
         formData.append('bio', profileData.bio || "");
+        formData.append('medical_license_number', profileData.license || profileData.medical_license_number || "");
 
         if (profileData.profile_image instanceof File) {
             formData.append('profile_image', profileData.profile_image);
@@ -144,6 +145,22 @@ export const apiService = {
         return handleResponse(response);
     },
 
+    async getScans(doctorId?: string) {
+        const url = doctorId ? `${API_BASE_URL}/scans?doctor_id=${doctorId}` : `${API_BASE_URL}/scans`;
+        const response = await fetch(url);
+        return handleResponse(response);
+    },
+
+    async updateComments(scanId: string | number, comments: string) {
+        const formData = new FormData();
+        formData.append('comments', comments);
+        const response = await fetch(`${API_BASE_URL}/update_comments/${scanId}`, {
+            method: 'POST',
+            body: formData,
+        });
+        return handleResponse(response);
+    },
+
     async saveScan(scanData: {
         patient_id: string;
         image_path: string;
@@ -154,6 +171,7 @@ export const apiService = {
         tooth_type: string;
         affected_area: string;
         confidence: string;
+        doctor_comments?: string;
     }) {
         const formData = new FormData();
         Object.entries(scanData).forEach(([key, value]) => {
@@ -168,10 +186,10 @@ export const apiService = {
     },
 
     async deleteScan(id: string | number) {
-        // Backend currently lacks a /delete_scan endpoint, so we simulate a successful
-        // deletion to allow the frontend UI state to update without throwing an error.
-        console.warn(`Simulating deletion for scan ${id} (no backend endpoint available).`);
-        return { status: true, message: "Scan removed from view" };
+        const response = await fetch(`${API_BASE_URL}/delete_scan/${id}`, {
+            method: 'DELETE',
+        });
+        return handleResponse(response);
     },
 
     // Forgot Password & OTP

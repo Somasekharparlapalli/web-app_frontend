@@ -48,6 +48,13 @@ export function DoctorSignUpScreen({ onNavigate, setUserRole, onSignUpSuccess }:
       return;
     }
 
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(formData.fullName)) {
+      setMessage({ text: 'Full name must contain only alphabets and spaces', type: 'error' });
+      clearMsg();
+      return;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setMessage({ text: 'Please enter a valid email address', type: 'error' });

@@ -132,7 +132,7 @@ export function UploadImageScreen({ onNavigate, onScanComplete, userRole, patien
         toothType: detectedToothType,
         peptideRecommendations: (result['Recommended Peptides'] || []).map((p: string) => `${p} Peptide`),
         patient_id: selectedPatientId || patientId,
-        id: result['id']
+        id: result['scan_id'] || result['id']
       };
 
       setIsAnalyzing(false);

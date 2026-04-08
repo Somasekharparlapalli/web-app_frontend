@@ -71,14 +71,27 @@ export function PatientDetailScreen({ onNavigate, patients, selectedPatientId, s
       return;
     }
 
-    if (!phone.trim()) {
-      setError('Please enter phone number');
+    if (name.trim().length < 3) {
+      setError('Patient name must be at least 3 characters');
       setTimeout(() => setError(''), 3000);
       return;
     }
 
-    if (!age.trim() || isNaN(Number(age)) || Number(age) <= 0) {
-      setError('Please enter a valid age');
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(name)) {
+      setError('Patient name must contain only alphabets and spaces');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    if (!phone.trim() || phone.trim().length !== 10) {
+      setError('Please enter a valid 10-digit phone number');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    if (!age.trim() || isNaN(Number(age)) || Number(age) <= 0 || Number(age) > 120) {
+      setError('Age must be between 1 and 120');
       setTimeout(() => setError(''), 3000);
       return;
     }

@@ -54,51 +54,8 @@ export function SettingsScreen({ onNavigate, darkMode, setDarkMode, userRole }: 
                   </label>
                 </div>
               </div>
-
-              <button
-                onClick={() => onNavigate('language')}
-                className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                      <Globe className="w-5 h-5 text-green-500" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm text-gray-800 dark:text-gray-200">Language</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Select your language</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-400 dark:text-gray-500">›</span>
-                </div>
-              </button>
-
-              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                      <Moon className="w-5 h-5 text-purple-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-800 dark:text-gray-200">Dark Mode</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {darkMode ? 'Enabled' : 'Disabled'}
-                      </p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={darkMode}
-                      onChange={(e) => setDarkMode(e.target.checked)}
-                    />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
-                  </label>
-                </div>
               </div>
             </div>
-          </div>
 
           {/* Privacy & Security Settings */}
           <div>

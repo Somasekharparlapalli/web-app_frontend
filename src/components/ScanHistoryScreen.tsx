@@ -9,22 +9,24 @@ interface ScanHistoryScreenProps {
   userRole?: 'doctor' | 'patient' | 'admin' | 'student' | null;
   onViewScanReport?: (scanData: any) => void;
   patientId?: string;
+  doctorId?: string;
   doctorAnalysisHistory?: any[];
   onDeleteScan?: (scanId: string | number) => Promise<{ status: boolean; message?: string }>;
   patients?: any[];
 }
 
-export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, patientId, doctorAnalysisHistory = [], onDeleteScan, patients = [] }: ScanHistoryScreenProps) {
+export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, patientId, doctorId, doctorAnalysisHistory = [], onDeleteScan, patients = [] }: ScanHistoryScreenProps) {
   const [scans, setScans] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [dbError, setDbError] = useState(false);
   const [stats, setStats] = useState({ total: 0, severe: 0, moderate: 0, mild: 0 });
   const [selectedScans, setSelectedScans] = useState<Set<string | number>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [showMyReports, setShowMyReports] = useState(false);
 
   useEffect(() => {
     loadScans();
-  }, [patientId, doctorAnalysisHistory, patients]);
+  }, [patientId, doctorId, doctorAnalysisHistory, patients]);
 
   const updateStats = (scanList: any[]) => {
     const newStats = {
@@ -72,12 +74,7 @@ export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, pati
       if (patientId) {
         response = await apiService.getScanHistory(patientId);
       } else {
-        try {
-          response = await apiService.getAllScanHistory();
-        } catch {
-          // Fallback: backend not restarted yet, try anonymous scans only
-          response = await apiService.getScanHistory('0');
-        }
+        response = await apiService.getScans(doctorId);
       }
 
       if (response?.status && response?.data?.length > 0) {
@@ -241,19 +238,7 @@ export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, pati
 
   const handleDownloadReports = () => {
     if (scans.length === 0) return;
-
-    // If specific scans are selected, maybe we show a special combined view?
-    // For now, if one is selected, show that one's report. 
-    // If many are selected or none, show the most recent one.
-    const targetScan = isSelectionMode && selectedScans.size === 1
-      ? scans.find(s => selectedScans.has(s.id))
-      : scans[0];
-
-    if (onViewScanReport) {
-      onViewScanReport(targetScan);
-    } else {
-      onNavigate('report-details');
-    }
+    setShowMyReports(true);
   };
 
   return (
@@ -311,27 +296,7 @@ export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, pati
             </div>
           )}
         </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-4 gap-2.5">
-          <div className="bg-blue-50 rounded-2xl p-3.5 text-center">
-            <p className="text-xs text-gray-600 mb-1">Total</p>
-            <p className="text-2xl text-blue-600 font-bold">{stats.total}</p>
-          </div>
-          <div className="bg-red-50 rounded-2xl p-3.5 text-center">
-            <p className="text-xs text-gray-600 mb-1">Severe</p>
-            <p className="text-2xl text-red-600 font-bold">{stats.severe}</p>
-          </div>
-          <div className="bg-orange-50 rounded-2xl p-3.5 text-center">
-            <p className="text-xs text-gray-600 mb-1">Mod</p>
-            <p className="text-2xl text-orange-600 font-bold">{stats.moderate}</p>
-          </div>
-          <div className="bg-green-50 rounded-2xl p-3.5 text-center">
-            <p className="text-xs text-gray-600 mb-1">Mild</p>
-            <p className="text-2xl text-green-600 font-bold">{stats.mild}</p>
-          </div>
         </div>
-      </div>
 
       {/* Content */}
       <div className="flex-1 px-5 py-4 overflow-y-auto bg-gray-50">
@@ -360,25 +325,11 @@ export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, pati
           </div>
         ) : (
           <>
-            <button
-              onClick={() => onNavigate('doctor-ai-analyses')}
-              className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 text-white p-4 rounded-2xl hover:from-blue-600 hover:to-cyan-500 transition-all mb-5 flex items-center justify-between shadow-md"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <Brain className="w-6 h-6 text-white" />
+            {showMyReports && (
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-base text-gray-900 font-semibold">My Reports</h3>
                 </div>
-                <div className="text-left">
-                  <p className="text-base font-semibold">Recent AI Analyses</p>
-                  <p className="text-xs text-white/90">View uploaded scans with AI detection</p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-white" />
-            </button>
-
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base text-gray-900 font-semibold">Recent Scans</h3>
-            </div>
 
             <div className="space-y-3 mb-6">
               {scans.map((scan) => (
@@ -476,29 +427,9 @@ export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, pati
                 </div>
               ))}
             </div>
+              </>
+            )}
           </>
-        )}
-
-        {/* Progress Overview Section - Hidden if no scans */}
-        {scans.length > 0 && (
-          <div className="bg-white border border-gray-100 rounded-[32px] p-6 mb-6 shadow-sm">
-            <h3 className="text-base text-gray-900 font-bold mb-4 flex items-center gap-2">
-              <TrendingDown className="w-5 h-5 text-green-500" />
-              Progress Overview
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-semibold text-gray-600">Risk Reduction</span>
-                <span className="text-lg font-black text-green-600">-15%</span>
-              </div>
-              <div className="w-full bg-gray-50 rounded-full h-3 border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-green-400 to-green-600 h-full rounded-full transition-all duration-1000" style={{ width: '85%' }}></div>
-              </div>
-              <p className="text-xs text-gray-500 leading-relaxed font-medium">
-                Analysis suggests oral health stability. Keep following the recommended peptide routine.
-              </p>
-            </div>
-          </div>
         )}
 
         {/* Action Buttons */}
@@ -517,7 +448,7 @@ export function ScanHistoryScreen({ onNavigate, userRole, onViewScanReport, pati
             className="bg-white border-2 border-blue-500 text-blue-600 py-4 rounded-2xl hover:bg-blue-50 transition-all font-bold text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
           >
             <FileText className="w-5 h-5" />
-            Full Reports
+            Downloaded Reports
           </button>
         </div>
       </div>

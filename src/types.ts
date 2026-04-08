@@ -23,6 +23,7 @@ export interface ScanData {
     peptideRecommendations?: string[];
     patient_id?: string | number;
     id?: string | number;
+    doctorComments?: string;
 }
 
 export interface MedicalData {

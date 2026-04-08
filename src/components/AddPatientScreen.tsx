@@ -31,8 +31,21 @@ export function AddPatientScreen({ onNavigate, setPatients, doctorId, onPatientA
       return;
     }
 
-    if (!age.trim() || isNaN(Number(age)) || Number(age) <= 0) {
-      setError('Please enter a valid age');
+    if (name.trim().length < 3) {
+      setError('Patient name must be at least 3 characters');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(name)) {
+      setError('Patient name must contain only alphabets and spaces');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    if (!age.trim() || isNaN(Number(age)) || Number(age) <= 0 || Number(age) > 120) {
+      setError('Age must be between 1 and 120');
       setTimeout(() => setError(''), 3000);
       return;
     }

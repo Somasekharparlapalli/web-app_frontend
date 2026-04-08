@@ -26,6 +26,13 @@ export function DoctorLoginScreen({ onNavigate, setUserRole, setForgotPasswordPo
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setMessage({ text: 'Please enter a valid email address', type: 'error' });
+      clearMsg();
+      return;
+    }
+
     const hasUppercase = /[A-Z]/.test(password);
     const hasLowercase = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ArrowLeft, AlertCircle, CheckCircle, FileText, Shield, Droplet } from 'lucide-react';
 import { ScanData } from '../types';
 import { apiService } from '../api/apiService';
@@ -65,6 +66,7 @@ export function DetectionResultScreen({ onNavigate, scanData, userRole, onSaveSc
   };
 
   const data = scanData || defaultData;
+  const [doctorComments, setDoctorComments] = useState(data.doctorComments || '');
 
   // Live scan date — moment the result screen is shown
   const scanDate = new Date().toLocaleDateString('en-US', {
@@ -269,6 +271,25 @@ export function DetectionResultScreen({ onNavigate, scanData, userRole, onSaveSc
               View All Peptide Types
             </button>
           </div>
+
+          {/* Doctor Clinical Comments Section */}
+          <div className="bg-white shadow-md rounded-2xl p-4 mt-4 border border-gray-100">
+            <h2 className="text-sm font-semibold text-blue-600 mb-2 flex items-center gap-1">
+              🩺 Doctor’s Clinical Comments
+            </h2>
+            {userRole === 'doctor' ? (
+              <textarea
+                value={doctorComments}
+                onChange={(e) => setDoctorComments(e.target.value)}
+                placeholder="Enter clinical notes, observations, or warnings here..."
+                className="w-full text-xs text-gray-700 leading-relaxed border border-gray-200 rounded-lg p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none h-24 resize-none"
+              />
+            ) : (
+              <p className="text-xs text-gray-700 leading-relaxed">
+                {doctorComments || "No clinical comments available."}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -290,24 +311,36 @@ export function DetectionResultScreen({ onNavigate, scanData, userRole, onSaveSc
           <button
             onClick={async () => {
               try {
-                const res = await apiService.saveScan({
-                  patient_id: (data.patient_id && data.patient_id !== 'undefined') ? String(data.patient_id) : '0',
-                  image_path: data.imageUrl || data.image?.split('/').pop() || 'unknown.jpg',
-                  condition_title: config.title,
-                  condition_desc: config.message,
-                  severity: data.severity.charAt(0).toUpperCase() + data.severity.slice(1),
-                  risk_level: data.riskLevel,
-                  tooth_type: data.toothType,
-                  affected_area: data.affectedArea,
-                  confidence: String(data.confidence)
-                });
+                let dbId = data.id;
                 
-                const dbId = res?.id || Math.random().toString();
-                if (onSaveScanLocally) onSaveScanLocally(data, dbId);
-                alert('Scan successfully saved to cloud and local history!');
+                if (dbId && String(dbId) !== '0') {
+                  // Auto-saved already by /scan, just update comments
+                  if (doctorComments.trim()) {
+                    await apiService.updateComments(dbId, doctorComments);
+                  }
+                } else {
+                  // Fallback save in case auto-save failed in /scan (or returned 0)
+                  const res = await apiService.saveScan({
+                    patient_id: (data.patient_id && data.patient_id !== 'undefined') ? String(data.patient_id) : '0',
+                    image_path: data.imageUrl || data.image?.split('/').pop() || 'unknown.jpg',
+                    condition_title: config.title,
+                    condition_desc: config.message,
+                    severity: data.severity.charAt(0).toUpperCase() + data.severity.slice(1),
+                    risk_level: data.riskLevel,
+                    tooth_type: data.toothType,
+                    affected_area: data.affectedArea,
+                    confidence: String(data.confidence),
+                    doctor_comments: doctorComments
+                  });
+                  if (res && res.id) dbId = res.id;
+                }
+                
+                if (onSaveScanLocally) onSaveScanLocally({ ...data, doctorComments }, dbId || Math.random().toString());
+                alert('Scan successfully saved to history!');
               } catch (e) {
-                console.error("Manual save failed:", e);
-                if (onSaveScanLocally) onSaveScanLocally(data, Math.random().toString());
+                console.error("Save failed:", e);
+                // Still allow local save for UI feedback if desirable
+                if (onSaveScanLocally) onSaveScanLocally({ ...data, doctorComments }, data.id || Math.random().toString());
               }
               onNavigate('history');
             }}

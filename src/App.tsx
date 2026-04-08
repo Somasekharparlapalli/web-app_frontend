@@ -92,7 +92,7 @@ export default function App() {
           oralHygieneScore: p.oral_hygiene_score || 'Good'
         }));
         setPatients(mappedPatients);
-        fetchAllScans(mappedPatients);
+        fetchAllScans(mappedPatients, doctorId);
       }
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -111,10 +111,10 @@ export default function App() {
       clinicName: doctorData.clinic_name || doctorData.clinicName || 'Varnish Dental Clinic',
       license: doctorData.license_number || doctorData.medical_license_number || '',
       bio: doctorData.bio || '',
-      profile_image: doctorData.profile_image 
-        ? (doctorData.profile_image.startsWith('http') 
-            ? doctorData.profile_image 
-            : `${UPLOADS_URL}${doctorData.profile_image.replace(/^(\/)?uploads\//, '')}`)
+      profile_image: doctorData.profile_image
+        ? (doctorData.profile_image.startsWith('http')
+          ? doctorData.profile_image
+          : `${UPLOADS_URL}${doctorData.profile_image.replace(/^(\/)?uploads\//, '')}`)
         : ''
     };
 
@@ -131,7 +131,7 @@ export default function App() {
     // Fetch patients and scans for this doctor
     if (updatedProfile.id) {
       fetchPatients(updatedProfile.id);
-      fetchAllScans();
+      fetchAllScans(undefined, updatedProfile.id);
     }
   };
 
@@ -199,9 +199,9 @@ export default function App() {
 
   const [allDbScans, setAllDbScans] = useState<any[]>([]);
 
-  async function fetchAllScans(currentPatients: any[] = patients) {
+  async function fetchAllScans(currentPatients: any[] = patients, doctorId?: string) {
     try {
-      const response = await apiService.getAllScanHistory(0);
+      const response = await apiService.getScans(doctorId || userProfile.id || undefined);
       if (response.status && response.data) {
         const mappedScans = response.data.map((s: any) => ({
           ...s,
@@ -212,7 +212,7 @@ export default function App() {
 
         // Filter by patients to isolate data to the logged-in doctor
         const patientIdSet = new Set((currentPatients || []).map(p => String(p.id)));
-        const filteredScans = mappedScans.filter((s: any) => 
+        const filteredScans = mappedScans.filter((s: any) =>
           s.patient_id ? patientIdSet.has(String(s.patient_id)) : false
         );
 
@@ -304,7 +304,8 @@ export default function App() {
         hasIssue: scanData.hasIssue,
         aiFindings: getAIFindings(scanData.riskLevel, scanData.toothType),
         image: scanData.image, // Base64 string preventing 404s natively!
-        patient_id: scanData.patient_id
+        patient_id: scanData.patient_id,
+        doctorComments: scanData.doctorComments
       };
       const updated = [newDoctorAnalysis, ...doctorAnalysisHistory];
       setDoctorAnalysisHistory(updated);
@@ -410,9 +411,9 @@ export default function App() {
       case 'recommendation':
         return <RecommendationScreen onNavigate={handleNavigate} scanData={currentScanData} />;
       case 'history':
-        return <ScanHistoryScreen onNavigate={handleNavigate} userRole={userRole} onViewScanReport={handleViewScanReport} patientId={selectedPatientId?.toString()} doctorAnalysisHistory={doctorAnalysisHistory} onDeleteScan={handleDeleteScan} patients={patients} />;
+        return <ScanHistoryScreen onNavigate={handleNavigate} userRole={userRole} onViewScanReport={handleViewScanReport} patientId={selectedPatientId?.toString()} doctorId={userProfile.id} doctorAnalysisHistory={doctorAnalysisHistory} onDeleteScan={handleDeleteScan} patients={patients} />;
       case 'scan-history':
-        return <ScanHistoryScreen onNavigate={handleNavigate} userRole={userRole} onViewScanReport={handleViewScanReport} patientId={selectedPatientId?.toString()} doctorAnalysisHistory={doctorAnalysisHistory} onDeleteScan={handleDeleteScan} patients={patients} />;
+        return <ScanHistoryScreen onNavigate={handleNavigate} userRole={userRole} onViewScanReport={handleViewScanReport} patientId={selectedPatientId?.toString()} doctorId={userProfile.id} doctorAnalysisHistory={doctorAnalysisHistory} onDeleteScan={handleDeleteScan} patients={patients} />;
       case 'doctor-ai-analyses':
         return <DoctorAIAnalysesScreen onNavigate={handleNavigate} doctorAnalysisHistory={doctorAnalysisHistory} />;
       case 'about':
